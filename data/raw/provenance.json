@@ -1,0 +1,26 @@
+{
+  "9n3s-kdb3": {
+    "title": "Hospital Readmissions Reduction Program",
+    "dataset_id": "9n3s-kdb3",
+    "modified": "2026-01-26",
+    "released": "2026-05-13",
+    "next_update": null,
+    "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/a171bc36c488d3e0dc33ec63abb469a6_1770163617/FY_2026_Hospital_Readmissions_Reduction_Program_Hospital.csv",
+    "retrieved_at_utc": "2026-06-18T07:58:39.060516+00:00",
+    "bytes": 2068464,
+    "rows": 18330,
+    "local_path": "data/raw/hrrp_raw.csv"
+  },
+  "xubh-q36u": {
+    "title": "Hospital General Information",
+    "dataset_id": "xubh-q36u",
+    "modified": "2026-04-28",
+    "released": "2026-05-13",
+    "next_update": null,
+    "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/893c372430d9d71a1c52737d01239d47_1777413958/Hospital_General_Information.csv",
+    "retrieved_at_utc": "2026-06-18T07:58:39.340271+00:00",
+    "bytes": 1453884,
+    "rows": 5432,
+    "local_path": "data/raw/hospital_info_raw.csv"
+  }
+}

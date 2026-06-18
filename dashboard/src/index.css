@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply text-slate-100 font-sans antialiased;
+  margin: 0;
+  /* Deep midnight-indigo with aurora glows (violet + cyan + mint). */
+  background:
+    radial-gradient(1100px 760px at 78% -8%, rgba(167, 139, 250, 0.14), transparent 60%),
+    radial-gradient(1000px 720px at 10% 8%, rgba(56, 189, 248, 0.10), transparent 58%),
+    radial-gradient(900px 800px at 50% 110%, rgba(94, 234, 212, 0.10), transparent 60%),
+    #07070E;
+  background-attachment: fixed;
+}
+
+@layer components {
+  .glass {
+    background: rgba(140, 143, 176, 0.05);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border: 1px solid rgba(167, 139, 250, 0.12);
+  }
+  .glass-hover {
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .glass-hover:hover {
+    border-color: rgba(94, 234, 212, 0.5);
+    box-shadow: 0 0 48px rgba(94, 234, 212, 0.16), 0 0 1px rgba(167, 139, 250, 0.4);
+  }
+  .text-gradient {
+    background: linear-gradient(110deg, #A78BFA, #38BDF8, #5EEAD4, #A78BFA);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: aurora-shift 8s ease-in-out infinite;
+  }
+  .glow {
+    box-shadow: 0 0 48px rgba(94, 234, 212, 0.16);
+  }
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-[0.22em];
+    color: #5EEAD4;
+  }
+  /* tabular numbers for data figures */
+  .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #07070E; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#A78BFA, #5EEAD4);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover { background: #5EEAD4; }

@@ -1,0 +1,10 @@
+pandas
+numpy
+requests
+scipy
+scikit-learn
+matplotlib
+seaborn
+jupyter
+nbformat
+ipykernel
