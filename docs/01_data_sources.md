@@ -61,8 +61,8 @@ Run with: `python src/fetch_data.py`
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install pandas numpy requests scipy scikit-learn matplotlib seaborn jupyter
-python src/fetch_data.py          # → data/raw/hrrp_raw.csv + provenance.json
+pip install -r requirements.txt
+python src/fetch_data.py          # → data/raw/hrrp_raw.csv + hospital_info_raw.csv + provenance.json
 python src/build_aggregates.py    # → data/processed/*.csv + dashboard JSON
 ```
 

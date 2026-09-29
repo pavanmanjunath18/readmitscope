@@ -38,7 +38,7 @@ be coerced to numbers with the sentinels mapped to null during cleaning.
 | Field | Definition |
 |---|---|
 | `condition` | Human-readable label mapped from `Measure Name` (e.g. `HF` → "Heart Failure") |
-| `worse_than_expected` | Boolean: `Excess Readmission Ratio > 1.0` |
+| `worse_than_expected` | Boolean: `Excess Readmission Ratio > 1.0` (above the national-average benchmark; ~half of measures by construction) |
 | `err_deviation_pct` | `(ERR − 1) × 100` — % above/below the expected benchmark |
 | `is_reported` | Boolean: row has a usable (non-null) ERR after cleaning |
 
@@ -50,4 +50,7 @@ be coerced to numbers with the sentinels mapped to null during cleaning.
 | `ownership_raw` | category | CMS's 12 raw ownership values | — |
 | `ownership` | category | Grouped: Non-profit / For-profit / Government / Federal-Military | Mapping in `OWNERSHIP_GROUPS` (see decisions) |
 | `emergency_services` | bool-ish | Yes / No | — |
+
+⚠ The overall star rating is partly built from readmission measures (its Readmission
+measure group), so associations between star rating and ERR are partly mechanical.
 | `star_rating` | numeric | CMS Hospital overall rating, 1–5 | `"Not Available"` → null (~40% of hospitals unrated) |

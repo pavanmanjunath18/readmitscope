@@ -19,6 +19,11 @@ plt.rcParams.update({"figure.dpi": 110, "axes.titleweight": "bold", "axes.titles
 ROOT = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()
 df = pd.read_csv(ROOT / "data" / "processed" / "hrrp_enriched.csv", dtype={"facility_id": str})
 print(len(df), "reported measures;", df["facility_id"].nunique(), "hospitals")
+# Tests use ONE value per hospital (its mean ERR) so correlated measures from the
+# same facility are not counted as independent evidence.
+hosp = (df.groupby("facility_id")
+          .agg(mean_err=("err", "mean"), ownership=("ownership", "first"),
+               star_rating=("star_rating", "first")))
 """
 
 cells = [
@@ -26,10 +31,9 @@ cells = [
 # 04 — Phase 2: What *kind* of hospital readmits more?
 **ReadmitScope US**
 
-Phase 1 showed readmissions are systemic and volume-linked. Here we enrich the HRRP
-data with **CMS Hospital General Information** (ownership, hospital type, overall star
-rating) to ask: do *for-profit* hospitals and *lower-rated* hospitals readmit more —
-even after CMS's risk adjustment?
+Phase 1 showed readmission performance behaves like a hospital-level trait. Here we
+enrich the HRRP data with **CMS Hospital General Information** (ownership, hospital
+type, overall star rating) to ask which *kinds* of hospitals readmit more.
 
 Join key: `Facility ID` (CCN). Match rate ≈ 99.7% of reported HRRP hospitals.
 """),
@@ -47,15 +51,15 @@ plt.tight_layout(); plt.show()
 own.round(3)
 """),
     code("""
-groups = [g['err'].values for _,g in df.dropna(subset=['ownership']).groupby('ownership')]
+groups = [g['mean_err'].values for _,g in hosp.dropna(subset=['ownership']).groupby('ownership')]
 h, p = stats.kruskal(*groups)
-print(f"Kruskal-Wallis across ownership groups: H={h:.1f}, p={p:.2e}")
-fp, nfp = df[df['ownership']=='For-profit']['err'], df[df['ownership']=='Non-profit']['err']
-u, p2 = stats.mannwhitneyu(fp, nfp, alternative='greater')
-print(f"For-profit vs Non-profit (one-sided): p={p2:.2e}")
+print(f"Kruskal-Wallis across ownership groups (hospital level): H={h:.1f}, p={p:.2e}")
+fp, nfp = hosp[hosp['ownership']=='For-profit']['mean_err'], hosp[hosp['ownership']=='Non-profit']['mean_err']
+u, p2 = stats.mannwhitneyu(fp, nfp, alternative='two-sided')
+print(f"For-profit vs Non-profit (two-sided, hospital level): p={p2:.2e}")
 print(f"  median ERR  for-profit={fp.median():.4f}  non-profit={nfp.median():.4f}")
 """),
-    md("**Read:** ownership groups differ significantly (Kruskal–Wallis p ≪ 0.001). **For-profit** hospitals readmit significantly more than **non-profit** (Mann–Whitney p ≪ 0.001), even though ERR is risk-adjusted."),
+    md("**Read:** unadjusted, for-profit hospitals have a higher median ERR than non-profit ones (hospital-level Mann–Whitney p < 0.001). But ownership is entangled with star rating and geography: in the adjusted model (notebook 03, §5) the for-profit gap shrinks to well under one ERR point and is **not statistically significant**. Federal / Military has only ~18 hospitals — too few to interpret."),
     md("## 2. Overall star rating\nCMS's 1–5 star summary quality rating. Is it associated with readmissions?"),
     code("""
 rat = (df.dropna(subset=['star_rating']).groupby('star_rating')
@@ -72,30 +76,35 @@ plt.tight_layout(); plt.show()
 rat.round(3)
 """),
     code("""
-sub = df.dropna(subset=['star_rating'])
-rho, p = stats.spearmanr(sub['star_rating'], sub['err'])
-print(f"Spearman (star rating vs ERR): rho={rho:.3f}, p={p:.2e}  (n={len(sub):,})")
+sub = hosp.dropna(subset=['star_rating'])
+rho, p = stats.spearmanr(sub['star_rating'], sub['mean_err'])
+print(f"Spearman (star rating vs hospital mean ERR): rho={rho:.3f}, p={p:.2e}  (n={len(sub):,} hospitals)")
 """),
-    md("""**Read:** a strong, clean **dose–response**: mean ERR falls from **1.048 (★1)** to
-**0.966 (★5)**, and the share worse-than-expected drops from **73% to 31%**. Spearman
-ρ ≈ −0.27 (p ≪ 0.001). The overall star rating is a meaningful proxy for readmission risk."""),
+    md("""**Read:** a strong, ordered gradient — mean ERR falls from ★1 to ★5 and the share
+above 1.0 drops from roughly 73% to 31%.
+
+⚠ **Circularity caveat:** the CMS overall star rating is built partly *from* readmission
+measures (its Readmission measure group includes these same condition-level measures).
+Part of this association is therefore mechanical. It shows the star rating is a usable
+public signal of readmission performance — not that "quality" independently *causes*
+lower readmissions."""),
     md("## 3. Why hospital *type* doesn't vary here"),
     code("""
 print(df.dropna(subset=['hospital_type']).groupby('hospital_type')['facility_id'].nunique())
-print("\\n=> Critical Access & specialty hospitals are largely EXEMT from HRRP,")
+print("\\n=> Critical Access & specialty hospitals are largely EXEMPT from HRRP,")
 print("   so reported HRRP measures are almost entirely Acute Care Hospitals.")
 """),
     md("""
 ## Phase 2 findings
-1. **For-profit hospitals readmit more** than non-profit/government — significant after
-   risk adjustment (Kruskal–Wallis p ≪ 0.001; for-profit median ERR 1.007 vs non-profit 0.994).
-2. **Star rating tracks readmissions strongly** — ★1 hospitals are worse-than-expected
-   73% of the time vs 31% for ★5; Spearman ρ ≈ −0.27 (p ≪ 0.001).
+1. **For-profit hospitals have higher unadjusted ERR** than non-profit ones, but the gap
+   is small and not significant once star rating, condition and state are controlled.
+2. **Star rating tracks readmissions strongly** — ★1 hospitals are above 1.0 ~73% of the
+   time vs ~31% for ★5 — partly by construction, since the rating includes readmissions.
 3. **Hospital type is not informative** in this data because HRRP applies to acute-care
    hospitals; critical-access and specialty hospitals are largely exempt.
 
-These attribute-level signals point to *who* to prioritise for readmission-reduction
-support: lower-rated and for-profit acute-care hospitals.
+CMS risk adjustment covers clinical case mix but not social risk, so none of these
+associations should be read as causal.
 """),
 ]
 

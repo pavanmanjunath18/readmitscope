@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MotionConfig } from 'framer-motion'
 import type { ReadmitData } from './types'
 import Hero from './components/Hero'
 import StorySummary from './components/StorySummary'
@@ -50,35 +51,41 @@ export default function App() {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen">
       <Hero meta={data.meta} kpis={data.kpis} />
       <main className="mx-auto max-w-7xl px-5 sm:px-8">
-        <KpiGrid kpis={data.kpis} />
-        <StorySummary kpis={data.kpis} enrichment={data.enrichment} />
+        <KpiGrid kpis={data.kpis} consistency={data.consistency} />
+        <StorySummary data={data} />
         <div id="story">
           <ScrollStory data={data} />
         </div>
         <div id="conditions">
-          <ConditionChart data={data.by_condition} />
+          <ConditionChart data={data.by_condition} surgicalVsMedical={data.tests.surgical_vs_medical} />
         </div>
         <div id="distribution" className="grid lg:grid-cols-2 gap-6">
           <ErrDistribution data={data.err_histogram} kpis={data.kpis} />
-          <VolumeChart data={data.volume_vs_err} />
+          <VolumeChart data={data.volume_vs_err} artifact={data.volume_artifact} />
         </div>
         <div id="states">
-          <StateRanking data={data.by_state} />
+          <StateRanking data={data.by_state} minHospitals={data.meta.min_hospitals_for_state_rank} />
         </div>
         <div id="enrichment">
-          <Enrichment data={data.enrichment} />
+          <Enrichment data={data.enrichment} model={data.model} />
         </div>
         <div id="explorer">
-          <HospitalExplorer hospitals={data.hospitals} byCondition={data.by_condition} />
+          <HospitalExplorer
+            hospitals={data.hospitals}
+            byCondition={data.by_condition}
+            minConditions={data.meta.min_conditions_for_ranking}
+          />
         </div>
         <div id="methodology">
-          <Methodology meta={data.meta} kpis={data.kpis} />
+          <Methodology meta={data.meta} kpis={data.kpis} volume={data.volume_artifact} />
         </div>
       </main>
       <Footer meta={data.meta} />
     </div>
+    </MotionConfig>
   )
 }
