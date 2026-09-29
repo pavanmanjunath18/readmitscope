@@ -10,6 +10,8 @@ dashboard/dist/
 
 # Raw data is re-fetchable from the live API; keep provenance + processed outputs.
 data/raw/*.csv
+data/raw/*.csv.part
+.pytest_cache/
 
 # OS
 .DS_Store

@@ -5,7 +5,7 @@ An end-to-end healthcare analytics project that asks: **which U.S. hospitals rea
 [Live dashboard](https://readmitscope.vercel.app)  
 Data source: CMS Provider Data Catalog, Hospital Readmissions Reduction Program, FY 2026 release
 
-![Python](https://img.shields.io/badge/Python-pandas%20%7C%20scipy%20%7C%20sklearn-2B8CFF)
+![Python](https://img.shields.io/badge/Python-pandas%20%7C%20scipy%20%7C%20numpy-2B8CFF)
 ![Dashboard](https://img.shields.io/badge/Dashboard-React%20%7C%20TypeScript%20%7C%20Recharts-14B8A6)
 ![Deploy](https://img.shields.io/badge/Deploy-Vercel-black)
 
@@ -23,18 +23,20 @@ ReadmitScope is built as a complete analyst workflow, not just a visualization. 
 
 The core metric is **Excess Readmission Ratio (ERR)**:
 
-- `ERR > 1.0`: hospital readmits more patients than expected after CMS risk adjustment.
+- `ERR > 1.0`: hospital readmits more patients than the national-average hospital would with the same patients.
 - `ERR < 1.0`: hospital performs better than expected.
-- ERR is useful because it adjusts for patient risk, making comparisons fairer across hospitals.
+- ERR adjusts for clinical case mix, making comparisons fairer across hospitals. Because the benchmark is the national average, about half of all measures sit above 1.0 by construction, so every finding here is compared against what chance would produce.
 
 ## Headline Findings
 
-1. Excess readmissions are systemic: 48.1% of reported condition-measures are worse than expected.
-2. 77.2% of hospitals exceed expected readmissions on at least one tracked condition.
-3. Volume matters: small hospitals show the highest risk, with a statistically significant negative association between discharge volume and ERR.
-4. Surgical and cardiac measures are slightly worse, but every tracked service line has elevated readmission risk.
-5. For-profit hospitals readmit more than non-profit hospitals after risk adjustment.
-6. CMS star rating is strongly ordered: 1-star hospitals perform worse far more often than 5-star hospitals.
+1. **Readmission performance is a hospital-level trait.** 9.2% of hospitals are worse than expected on every reported condition, about twice the 4.7% chance would give. ("Most hospitals are worse on at least one condition" is expected by construction.)
+2. **The "small hospitals do worst" pattern is a reporting artifact.** CMS only publishes counts when readmissions are 11 or more. Once that is accounted for, volume has no detectable effect (−0.03 ERR points per doubling, 95% CI −0.33 to +0.26).
+3. **No condition stands out.** All six sit between 47% and 50% above 1.0; surgical and medical measures do not differ (paired p = 0.58).
+4. **Star rating tracks readmissions strongly** (★1 +4.0 ERR points vs ★3, ★5 −4.0), partly by construction because the rating includes readmission measures.
+5. **The for-profit gap is small once rating and state are considered** (+0.4 points, p = 0.07).
+6. **Seven states are significantly above 1.0** (led by NJ and MA) and twelve below, ranking only states with 10 or more reporting hospitals.
+
+Tests use one value per hospital or hospital-clustered standard errors, because measures from the same hospital are correlated.
 
 See [docs/05_findings.md](docs/05_findings.md) for the full write-up.
 
@@ -43,7 +45,10 @@ See [docs/05_findings.md](docs/05_findings.md) for the full write-up.
 | Path | Purpose |
 |---|---|
 | [src/fetch_data.py](src/fetch_data.py) | Pulls the latest CMS HRRP data and logs provenance. |
-| [src/build_aggregates.py](src/build_aggregates.py) | Cleans, enriches, and exports dashboard-ready aggregates. |
+| [src/build_aggregates.py](src/build_aggregates.py) | Cleans, enriches, runs the statistical tests, and exports dashboard-ready aggregates. |
+| [src/stats_utils.py](src/stats_utils.py) | Confidence intervals and hospital-clustered OLS used by the pipeline. |
+| [tests/](tests/) | Pytest suite for the cleaning and statistics code. |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI: runs the tests and type-checks/builds the dashboard on every push and PR. |
 | [notebooks/01_cleaning.ipynb](notebooks/01_cleaning.ipynb) | Cleaning workflow and suppression handling. |
 | [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb) | Exploratory data analysis. |
 | [notebooks/03_analysis.ipynb](notebooks/03_analysis.ipynb) | Statistical analysis and hypothesis tests. |
@@ -68,6 +73,7 @@ pip install -r requirements.txt
 
 python src/fetch_data.py
 python src/build_aggregates.py
+pytest
 jupyter nbconvert --to notebook --execute --inplace notebooks/0*.ipynb
 ```
 

@@ -86,12 +86,33 @@ print("Footnote 29 rows that still have ERR:",
       "of", (raw['Footnote']=='29').sum(), "-> advisory, keep them")
 """),
     md("""
+### 3b. When are discharge counts suppressed?
+`Number of Discharges` is missing more often than ERR. We check *why* — this matters
+for any volume analysis.
+"""),
+    code("""
+disch = pd.to_numeric(raw['Number of Discharges'], errors='coerce')
+readm = pd.to_numeric(raw['Number of Readmissions'], errors='coerce')
+has_err = err_num.notna()
+print(pd.crosstab(disch[has_err].isna(), readm[has_err].isna(),
+                  rownames=['discharges missing'], colnames=['readmissions missing']))
+print("\\nsmallest published readmission count:", readm.min())
+"""),
+    md("""
+**Read:** discharges and readmissions are suppressed *together*, and the smallest
+published readmission count is **11**. CMS only shows counts when readmissions ≥ 11.
+For a small hospital, that means we only see its counts when its readmission rate is
+high — so a naïve volume analysis on published counts is **biased toward finding that
+small hospitals do badly**. The volume analysis therefore uses a *suppression-safe*
+subset (see `docs/04_decisions.md`, D6).
+"""),
+    md("""
 ### Cleaning decisions (see `docs/03_data_quality_log.md`)
 1. Coerce numerics; map sentinels (`Not Available`, `Too Few to Report`, `N/A`, ``) → null.
 2. Rows with footnote **1/5/7** = suppressed ERR → **not reported** (excluded from rate stats).
 3. Rows with footnote **29** keep their valid ERR but are flagged `has_advisory`.
 4. Keep `Facility ID` as string (preserve leading zeros).
-5. Volume analysis limited to rows with both ERR and discharge count.
+5. Volume analysis limited to *suppression-safe* rows: discharges ≥ 2 × 11 ÷ expected rate.
 """),
     code("""
 # The canonical cleaning lives in src/build_aggregates.py; we load its output here.
@@ -125,7 +146,15 @@ ax.set_title('Distribution of Excess Readmission Ratio'); ax.legend()
 plt.tight_layout(); plt.show()
 print(f"{(df['err']>1).mean()*100:.1f}% of reported measures are worse than expected (ERR>1)")
 """),
-    md("**Read:** roughly symmetric around 1.0 but with a slightly heavier right tail — a minority of hospitals readmit *far* above expected (ERR up to ~1.6), while almost half exceed the benchmark."),
+    md("""**Read:** roughly symmetric around 1.0. Because the *expected* rate is what the
+national-average hospital would achieve with the same patients, **about half of all
+measures sit above 1.0 by construction** — "48% worse than expected" is not by itself
+evidence of a problem. The informative parts are the tails and whether the *same*
+hospitals keep landing above 1.0 (tested in notebook 03)."""),
+    code("""
+print(f"ERR > 1.10 (≥10% excess): {(df['err']>1.10).mean()*100:.1f}% of measures")
+print(f"ERR < 0.90 (≥10% better): {(df['err']<0.90).mean()*100:.1f}% of measures")
+"""),
     md("## 2. Which conditions perform worst?"),
     code("""
 by_cond = (df.groupby('condition')
@@ -135,29 +164,34 @@ by_cond = (df.groupby('condition')
              .sort_values('pct_worse', ascending=False))
 fig, ax = plt.subplots(figsize=(8,4))
 bars = ax.barh(by_cond.index, by_cond['pct_worse'], color=ORANGE)
-ax.axvline(50, color=DARK, ls='--', lw=1)
-ax.set_xlabel('% of hospitals worse than expected'); ax.set_title('Readmission performance by condition')
+ax.axvline(50, color=DARK, ls='--', lw=1); ax.set_xlim(0, 100)
+ax.set_xlabel('% of hospitals with ERR > 1'); ax.set_title('Readmission performance by condition')
 ax.invert_yaxis()
 for b,v in zip(bars, by_cond['pct_worse']): ax.text(v+0.3, b.get_y()+b.get_height()/2, f"{v:.1f}%", va='center')
 plt.tight_layout(); plt.show()
 by_cond.round(3)
 """),
-    md("**Read:** surgical/cardiac measures (Bypass surgery, Heart attack) have the highest share of worse-than-expected hospitals; pneumonia the lowest. The spread across conditions is modest, suggesting readmissions are a *systemic* challenge rather than isolated to one service line."),
-    md("## 3. Does hospital volume relate to readmission performance?"),
+    md("**Read:** all six conditions sit within ~3 points of each other (≈47–50%), and with ~900–2,700 hospitals per condition those gaps are within sampling noise. **No single condition stands out** — the x-axis starts at 0 on purpose so small differences are not exaggerated."),
+    md("## 3. Does hospital volume relate to readmission performance?\nWe compare the naïve view (all published counts) with the *suppression-safe* subset (see notebook 01, §3b)."),
     code("""
-vol = df.dropna(subset=['discharges']).copy()
+import sys; sys.path.insert(0, str(ROOT / 'src'))
+from build_aggregates import suppression_safe
 bins=[0,50,100,200,400,800,np.inf]; labels=['<50','50-100','100-200','200-400','400-800','800+']
-vol['bin']=pd.cut(vol['discharges'],bins=bins,labels=labels,right=False)
-g = vol.groupby('bin', observed=True).agg(mean_err=('err','mean'), pct_worse=('err',lambda s:(s>1).mean()*100), n=('err','size'))
+def by_bin(sub):
+    sub = sub.assign(bin=pd.cut(sub['discharges'],bins=bins,labels=labels,right=False))
+    return sub.groupby('bin', observed=True).agg(pct_worse=('err',lambda s:(s>1).mean()*100), n=('err','size'))
+naive = by_bin(df.dropna(subset=['discharges']))
+safe  = by_bin(df[suppression_safe(df)]).query('n >= 30')
 fig, ax = plt.subplots(figsize=(8,4))
-ax.plot(g.index.astype(str), g['mean_err'], marker='o', color=ORANGE, lw=2)
-ax.axhline(1.0, color=DARK, ls='--', lw=1, label='Expected')
-ax.set_ylabel('Mean ERR'); ax.set_xlabel('Discharge volume (per condition)')
-ax.set_title('Higher-volume hospitals readmit less than expected'); ax.legend()
+ax.plot(naive.index.astype(str), naive['pct_worse'], marker='o', color=MUTED, lw=2, ls='--', label='All published counts (biased)')
+ax.plot(safe.index.astype(str), safe['pct_worse'], marker='o', color=ORANGE, lw=2, label='Suppression-safe rows')
+ax.axhline(50, color=DARK, ls=':', lw=1)
+ax.set_ylim(0, 100); ax.set_ylabel('% of measures with ERR > 1'); ax.set_xlabel('Discharges (per condition)')
+ax.set_title('The steep small-hospital effect comes from suppression'); ax.legend()
 plt.tight_layout(); plt.show()
-g.round(3)
+naive.join(safe, rsuffix='_safe').round(1)
 """),
-    md("**Read:** a clear, monotonic gradient — the lowest-volume hospitals average well above 1.0 while the highest-volume average below 1.0. Consistent with a *volume–outcome* relationship (practice effects, resources). ⚠ Caveat: suppressed rows skew small, so the very-low-volume bin is a selected sample."),
+    md("**Read:** the naïve curve shows small hospitals missing the benchmark ~99% of the time — but those are exactly the small hospitals whose readmissions were high enough (≥ 11) to be published. On suppression-safe rows the gradient is shallow (≈52% → 45%), and notebook 03 shows it vanishes once star rating, ownership, condition and state are controlled."),
     md("## 4. Geographic spread"),
     code("""
 by_state = (df.groupby('state').agg(mean_err=('err','mean'),
@@ -172,7 +206,7 @@ ax.set_xlabel('Mean ERR relative to 1.0'); ax.set_title('States: highest (top) v
 ax.invert_yaxis(); plt.tight_layout(); plt.show()
 by_state.head(5).round(3)
 """),
-    md("**Read:** mean ERR varies by state; the highest-ERR states warrant a closer look in the analysis notebook (note that ERR is risk-adjusted, so this is not simply a case-mix artifact)."),
+    md("**Read:** mean ERR varies by state, but small states (a handful of hospitals) produce noisy averages. Notebook 03 ranks only states with ≥ 10 reporting hospitals and attaches 95% confidence intervals. CMS risk adjustment covers clinical case mix but not social risk, so state gaps can still partly reflect population differences."),
 ]
 
 # ----------------------------------------------------------------------------- 03 analysis
@@ -181,53 +215,104 @@ analysis_cells = [
 # 03 — Statistical Analysis & Findings
 **ReadmitScope US**
 
-We move from description to inference: is the volume effect statistically real, do
-surgical vs medical conditions differ, and which hospitals are the genuine outliers?
+We move from description to inference. Two principles guide every test here:
+
+1. **ERR is centred on 1.0 by construction**, so "share above 1.0" is only meaningful
+   relative to what chance would produce.
+2. **Measures from the same hospital are correlated**, so tests run at the *hospital*
+   level (one value per hospital) or use standard errors *clustered by hospital*.
 """),
-    code(SETUP + "\nfrom scipy import stats"),
-    code("df = pd.read_csv(PROC, dtype={'facility_id':str})"),
-    md("## 1. Is the volume–readmission relationship statistically significant?\nSpearman correlation (robust to non-linearity) between discharge volume and ERR."),
+    code(SETUP + "\nfrom scipy import stats\nimport sys; sys.path.insert(0, str(ROOT / 'src'))\n"
+         "from build_aggregates import suppression_safe, clean_info, model_block\n"
+         "from stats_utils import mean_ci, fmt_p"),
+    code("df = pd.read_csv(PROC, dtype={'facility_id':str})\n"
+         "hosp = df.groupby('facility_id').agg(state=('state','first'), mean_err=('err','mean'),\n"
+         "                                     n=('err','size'), n_worse=('err', lambda s:(s>1).sum()))"),
+    md("## 1. Is poor performance concentrated in particular hospitals?\n"
+       "If ERR > 1 were a coin flip (p ≈ 0.48) independently per condition, how often would a hospital be worse on *at least one* / *every* condition?"),
     code("""
-vol = df.dropna(subset=['discharges'])
-rho, p = stats.spearmanr(vol['discharges'], vol['err'])
-print(f"Spearman rho = {rho:.3f}, p = {p:.2e}  (n={len(vol):,})")
-print("=> significant negative association: more volume -> lower ERR")
+p = (df['err'] > 1).mean()
+elig = hosp[hosp['n'] >= 3]
+rows = {
+    'worse on ≥1 condition':   ((hosp['n_worse']>0).mean(), (1-(1-p)**hosp['n']).mean()),
+    'worse on every condition (≥3 reported)': ((elig['n_worse']==elig['n']).mean(), (p**elig['n']).mean()),
+    'better on every condition (≥3 reported)': ((elig['n_worse']==0).mean(), ((1-p)**elig['n']).mean()),
+}
+pd.DataFrame(rows, index=['observed','expected by chance']).T.mul(100).round(1)
 """),
-    md("## 2. Do surgical and medical conditions differ?\nMann–Whitney U on ERR between the two clinical groups."),
     code("""
-surg = df[df['clinical_group']=='Surgical']['err']
-med  = df[df['clinical_group']=='Medical']['err']
-u, p = stats.mannwhitneyu(surg, med, alternative='two-sided')
-print(f"Surgical median ERR = {surg.median():.4f} (n={len(surg)})")
-print(f"Medical  median ERR = {med.median():.4f} (n={len(med)})")
-print(f"Mann-Whitney U p = {p:.4f}")
+wide = df.pivot_table(index='facility_id', columns='condition', values='err')
+wide.corr(method='spearman').round(2)
 """),
-    md("## 3. Outlier hospitals\nBest and worst performers, requiring ≥3 reported conditions for a fair average."),
+    md("""**Read:** "83% of hospitals are worse on at least one condition" is actually *below*
+the ~89% that coin flips would give, so it is **not** evidence of a systemic problem.
+The real signal is **consistency**: about twice as many hospitals as chance predicts
+are worse on *every* condition (and likewise better on every condition), and ERR is
+positively correlated across conditions within a hospital. Readmission performance
+behaves like a hospital-level trait."""),
+    md("## 2. Volume — real effect or suppression artifact?"),
+    code("""
+pub  = df.dropna(subset=['discharges'])
+safe = df[suppression_safe(df)]
+hidden = df[df['discharges'].isna()]
+for name, sub in [('all published counts', pub), ('suppression-safe', safe)]:
+    rho, pv = stats.spearmanr(sub['discharges'], sub['err'])
+    print(f"{name:22s} rho = {rho:+.3f}  p = {fmt_p(pv)}  n = {len(sub):,}")
+print(f"\\nrows with hidden counts (<11 readmissions): n = {len(hidden):,}, "
+      f"mean ERR = {hidden['err'].mean():.3f}, {(hidden['err']>1).mean()*100:.1f}% above 1.0")
+"""),
+    md("""**Read:** the headline ρ ≈ −0.16 shrinks to ≈ −0.05 once the suppression floor is
+respected — and the measures CMS hides (mostly small hospitals with few readmissions)
+are *better* than average. The adjusted model in §5 finds no volume effect."""),
+    md("## 3. Do surgical and medical conditions differ?\nPaired, within-hospital comparison: for hospitals reporting both groups, surgical mean ERR − medical mean ERR (Wilcoxon signed-rank)."),
+    code("""
+w = df.pivot_table(index='facility_id', columns='clinical_group', values='err', aggfunc='mean').dropna()
+diff = w['Surgical'] - w['Medical']
+res = stats.wilcoxon(diff)
+print(f"hospitals: {len(diff):,}   median difference: {diff.median():+.4f}   p = {fmt_p(res.pvalue)}")
+"""),
+    md("**Read:** no meaningful difference between surgical and medical readmission performance."),
+    md("## 4. States — which differ from 1.0 beyond noise?\nState mean of hospital-level ERR, 95% t-interval; only states with ≥ 10 reporting hospitals are ranked."),
+    code("""
+st = []
+for s, h in hosp.groupby('state'):
+    lo, hi = mean_ci(h['mean_err'])
+    st.append({'state': s, 'n_hospitals': len(h), 'mean_err': h['mean_err'].mean(), 'ci_low': lo, 'ci_high': hi})
+st = pd.DataFrame(st).query('n_hospitals >= 10').sort_values('mean_err', ascending=False)
+st['significant'] = np.where(st['ci_low']>1, 'above', np.where(st['ci_high']<1, 'below', ''))
+pd.concat([st.head(8), st.tail(8)]).round(4)
+"""),
+    md("## 5. Adjusted model\nERR × 100 ~ ownership + star rating + condition + state, OLS with hospital-clustered standard errors. A second fit on suppression-safe rows adds log2(discharges)."),
+    code("""
+info = clean_info(pd.read_csv(ROOT / 'data' / 'raw' / 'hospital_info_raw.csv', dtype=str))
+model, volume = model_block(df, info)
+print(f"n = {model['n_obs']:,} measures in {model['n_clusters']:,} hospitals\\n")
+display(pd.DataFrame(model['terms']).assign(p=lambda d: d['p'].map(fmt_p)))
+print(f"\\nVolume (per doubling of discharges): {volume['estimate']:+.2f} pts "
+      f"[{volume['ci_low']:+.2f}, {volume['ci_high']:+.2f}], p = {fmt_p(volume['p'])}")
+"""),
+    md("""**Read:** star rating remains strongly associated with ERR after adjustment (but see the
+circularity caveat in notebook 04). The for-profit gap shrinks to well under one ERR point
+and is not statistically significant; volume has no detectable effect."""),
+    md("## 6. Outlier hospitals\nBest and worst performers, requiring ≥3 reported conditions for a fair average. These are point estimates — single hospitals carry wide uncertainty, so treat them as leads for review, not verdicts."),
     code("""
 h = (df.groupby('facility_id')
        .agg(name=('facility_name','first'), state=('state','first'),
             mean_err=('err','mean'), n=('err','size'), n_worse=('err',lambda s:(s>1).sum()))
        .query('n >= 3'))
-print('WORST 10 (highest mean ERR):')
+print('HIGHEST 10 mean ERR:')
 display(h.sort_values('mean_err', ascending=False).head(10).round(3))
-print('BEST 10 (lowest mean ERR):')
+print('LOWEST 10 mean ERR:')
 display(h.sort_values('mean_err').head(10).round(3))
-"""),
-    md("## 4. Concentration — is the problem systemic or a few bad actors?"),
-    code("""
-share_any = (df.assign(worse=df['err']>1).groupby('facility_id')['worse'].any().mean())*100
-print(f"{share_any:.1f}% of hospitals are worse than expected on at least one condition.")
-print(f"National mean ERR = {df['err'].mean():.4f}, median = {df['err'].median():.4f}")
 """),
     md("""
 ## Headline findings
-1. **Readmissions are systemic** — ~48% of reported measures and **77% of hospitals**
-   exceed their expected readmission rate on at least one condition.
-2. **Volume matters** — a statistically significant negative association between
-   discharge volume and ERR; low-volume hospitals carry the highest risk.
-3. **Surgical vs medical** — tested for a difference between clinical groups (see p-value above).
-4. **Outliers exist** — a clear best/worst tail; the worst hospitals readmit ~20–60%
-   above expected even after risk adjustment.
+1. **Performance is a hospital-level trait** — hospitals worse on *every* condition occur at
+   about twice the chance rate. ("Most hospitals are worse on ≥1 condition" is expected by construction.)
+2. **The small-hospital effect was a reporting artifact** — driven by CMS's ≥11-readmission publication floor.
+3. **Star rating tracks ERR strongly**, even after adjustment (partly circular — see notebook 04).
+4. **Ownership and surgical/medical gaps are small** once rating and state are accounted for.
+5. **A handful of states** sit significantly above or below 1.0.
 
 See `docs/05_findings.md` for the executive summary and `docs/04_decisions.md` for the
 analytical decisions taken along the way.

@@ -38,17 +38,20 @@ For each hospital × condition, CMS publishes:
 - **Excess Readmission Ratio (ERR)** = Predicted ÷ Expected.
 
 Interpretation:
-- **ERR > 1.0** → the hospital readmits **more** than expected → contributes to a penalty.
+- **ERR > 1.0** → the hospital readmits **more** than the national-average hospital would.
+  (Since FY 2019, penalties compare each hospital's ERR with the median ERR of its
+  peer group — hospitals with a similar share of dual-eligible patients — not with 1.0.)
 - **ERR = 1.0** → exactly as expected.
 - **ERR < 1.0** → the hospital readmits **fewer** than expected → better than its peers.
 
-ERR is risk-adjusted, so it is a *fair* cross-hospital comparison — it already
-accounts for how sick each hospital's patients are.
+ERR is risk-adjusted for clinical case mix, so it is a much fairer cross-hospital
+comparison than raw rates. It does **not** adjust for social risk factors, and because
+the benchmark is the national average, roughly half of hospitals sit above 1.0 by design.
 
 ## Analytical questions
 
-1. **National picture** — Across all reported hospitals, what share readmit *more*
-   than expected (ERR > 1) for each condition? Which condition is the biggest problem?
+1. **National picture** — Is poor performance concentrated in particular hospitals
+   (more consistently than chance would produce)? Does any condition stand out?
 2. **Distribution** — How far do hospitals deviate from the ERR = 1.0 benchmark?
    Is the problem concentrated in a few bad performers, or systemic?
 3. **Geography** — Which states have the highest share of worse-than-expected

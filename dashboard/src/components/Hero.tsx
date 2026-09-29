@@ -1,12 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Activity, Database, Calendar } from 'lucide-react'
-import HeroScene from './HeroScene'
+import { useReducedMotion } from '../format'
 import type { Meta, Kpis } from '../types'
+
+// three.js + react-three-fiber are the heaviest part of the bundle and purely decorative,
+// so they load in a separate chunk after the page is interactive.
+const HeroScene = lazy(() => import('./HeroScene'))
 
 export default function Hero({ meta, kpis }: { meta: Meta; kpis: Kpis }) {
   const retrieved = new Date(meta.retrieved_at_utc).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
   })
+  const reduced = useReducedMotion()
   // Subtle parallax: hero content drifts up + fades as you scroll past it.
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 80])
@@ -14,10 +20,14 @@ export default function Hero({ meta, kpis }: { meta: Meta; kpis: Kpis }) {
 
   return (
     <header className="relative overflow-hidden border-b border-white/5 min-h-[560px]">
-      <HeroScene />
+      {!reduced && (
+        <Suspense fallback={null}>
+          <HeroScene />
+        </Suspense>
+      )}
       <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-vital/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 -left-20 h-80 w-80 rounded-full bg-vital-cyan/10 blur-3xl" />
-      <motion.div style={{ y, opacity }} className="relative mx-auto max-w-7xl px-5 sm:px-8 py-16 md:py-24">
+      <motion.div style={reduced ? undefined : { y, opacity }} className="relative mx-auto max-w-7xl px-5 sm:px-8 py-16 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -31,19 +41,19 @@ export default function Hero({ meta, kpis }: { meta: Meta; kpis: Kpis }) {
           </h1>
           <p className="mt-4 max-w-2xl text-base md:text-lg text-gray-300 leading-relaxed">
             Which U.S. hospitals readmit Medicare patients more than expected — and what
-            drives it. An analysis of <strong className="text-white">{kpis.n_hospitals.toLocaleString()}</strong> hospitals
-            across <strong className="text-white">{kpis.n_states}</strong> states using live CMS Hospital
-            Readmissions Reduction Program data.
+            explains it. An analysis of <strong className="text-white">{kpis.n_hospitals.toLocaleString()}</strong> hospitals
+            with reported measures across <strong className="text-white">{kpis.n_states}</strong> states (incl. D.C.),
+            using public CMS Hospital Readmissions Reduction Program data.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 text-xs text-gray-400">
             <Badge icon={<Database size={13} />} text={meta.source} />
-            <Badge icon={<Calendar size={13} />} text={`Reporting period ${meta.reporting_period}`} />
-            <Badge icon={<span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />} text={`Data refreshed ${retrieved}`} />
+            <Badge icon={<Calendar size={13} />} text={`${meta.release ? `${meta.release} · ` : ''}Reporting period ${meta.reporting_period}`} />
+            <Badge icon={<span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />} text={`Data retrieved ${retrieved}`} />
           </div>
-          <p className="mt-3 max-w-2xl text-xs text-gray-500 leading-relaxed">
+          <p className="mt-3 max-w-2xl text-xs text-gray-400 leading-relaxed">
             CMS computes readmission measures over a rolling 3-year window and publishes
-            with a lag (claims must fully mature). This is the latest release available —
-            re-running the pipeline picks up each CMS refresh automatically.
+            with a lag (claims must fully mature). Re-running the pipeline picks up each
+            CMS refresh.
           </p>
         </motion.div>
       </motion.div>
