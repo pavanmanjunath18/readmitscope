@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import Section from './Section'
 import Insight from './Insight'
-import { C, tooltipStyle } from '../theme'
+import { C, tooltipProps } from '../theme'
 import { fmtP, signed } from '../format'
 import type { Enrichment as EnrichmentData, Model, ModelTerm } from '../types'
 
@@ -47,7 +47,7 @@ export default function Enrichment({ data, model }: { data: EnrichmentData; mode
                 <YAxis type="category" dataKey="label" tick={{ fill: '#E5E7EB', fontSize: 12 }} width={130} />
                 <Tooltip
                   cursor={{ fill: 'rgba(45,212,191,0.08)' }}
-                  contentStyle={tooltipStyle}
+                  {...tooltipProps}
                   formatter={(_v: number, _n, p) => {
                     const o = p.payload as (typeof ownership)[number]
                     return [`${o.pct_worse}% above 1.0 (95% CI ${o.pct_worse_ci[0]}–${o.pct_worse_ci[1]}%) · mean ERR ${o.mean_err.toFixed(3)} · ${o.n_hospitals} hospitals`, o.group]
@@ -83,7 +83,7 @@ export default function Enrichment({ data, model }: { data: EnrichmentData; mode
                 <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} unit="%" tick={{ fill: AXIS, fontSize: 11 }} width={44} />
                 <Tooltip
                   cursor={{ fill: 'rgba(45,212,191,0.08)' }}
-                  contentStyle={tooltipStyle}
+                  {...tooltipProps}
                   formatter={(_v: number, _n, p) => {
                     const r = p.payload as (typeof rating)[number]
                     return [`${r.pct_worse}% above 1.0 (95% CI ${r.pct_worse_ci[0]}–${r.pct_worse_ci[1]}%) · mean ERR ${r.mean_err.toFixed(3)} · ${r.n_hospitals} hospitals`, r.label]

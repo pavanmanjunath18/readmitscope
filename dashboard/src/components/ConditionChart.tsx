@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import Section from './Section'
 import Insight from './Insight'
-import { C, tooltipStyle } from '../theme'
+import { C, tooltipProps } from '../theme'
 import { fmtP, useMinWidth } from '../format'
 import type { ConditionStat, TestResult } from '../types'
 
@@ -44,8 +44,7 @@ export default function ConditionChart({
               />
               <Tooltip
                 cursor={{ fill: 'rgba(45,212,191,0.08)' }}
-                contentStyle={tooltipStyle}
-                labelStyle={{ color: '#fff' }}
+                {...tooltipProps}
                 formatter={(v: number, _n, p) => {
                   const d = p.payload as ConditionStat
                   return [`${v}% above 1.0 (95% CI ${d.pct_worse_ci[0]}–${d.pct_worse_ci[1]}%) · ${d.n.toLocaleString()} hospitals`, d.full]

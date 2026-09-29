@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import Section from './Section'
 import Insight from './Insight'
-import { C, tooltipStyle } from '../theme'
+import { C, tooltipProps } from '../theme'
 import { useMinWidth } from '../format'
 import type { HistBin, Kpis } from '../types'
 
@@ -40,7 +40,7 @@ export default function ErrDistribution({ data, kpis }: { data: HistBin[]; kpis:
               <YAxis tick={{ fill: AXIS, fontSize: 11 }} width={44} />
               <Tooltip
                 cursor={{ fill: 'rgba(45,212,191,0.08)' }}
-                contentStyle={tooltipStyle}
+                {...tooltipProps}
                 labelFormatter={(_l, p) => (p?.[0]?.payload as { range?: string })?.range ?? ''}
                 formatter={(v: number) => [`${v.toLocaleString()} measures`, 'Count']}
               />
