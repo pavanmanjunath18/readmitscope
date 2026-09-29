@@ -22,12 +22,27 @@ export const C = {
   border: '#2A2C4A',      // tooltip border
 }
 
-/** Shared Recharts tooltip style. */
+/** Shared Recharts tooltip box style. */
 export const tooltipStyle = {
   background: C.card,
   border: `1px solid ${C.border}`,
   borderRadius: 12,
   boxShadow: '0 8px 40px rgba(94,234,212,0.10)',
+  padding: '10px 14px',
+  maxWidth: 340,
+  whiteSpace: 'normal' as const,
+}
+
+/**
+ * Spread onto every <Tooltip>. Recharts colours each tooltip line with its series
+ * colour by default, which falls back to a dark blue that is unreadable on this dark
+ * background — so title and value text are set explicitly.
+ */
+export const tooltipProps = {
+  contentStyle: tooltipStyle,
+  labelStyle: { color: '#FFFFFF', fontWeight: 600, marginBottom: 4 },
+  itemStyle: { color: C.text, fontSize: 13, lineHeight: 1.45 },
+  wrapperStyle: { outline: 'none', zIndex: 20 },
 }
 
 /** Aurora gradient used across section accents (violet → sky → mint). */

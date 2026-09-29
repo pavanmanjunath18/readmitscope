@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import Section from './Section'
 import Insight from './Insight'
-import { C, tooltipStyle } from '../theme'
+import { C, tooltipProps } from '../theme'
 import { fmtP, signed, useMinWidth } from '../format'
 import type { VolumeArtifact, VolumeBin } from '../types'
 
@@ -45,7 +45,7 @@ export default function VolumeChart({ data, artifact: a }: { data: VolumeBin[]; 
               />
               <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} unit="%" tick={{ fill: AXIS, fontSize: 11 }} width={44} />
               <Tooltip
-                contentStyle={tooltipStyle}
+                {...tooltipProps}
                 labelFormatter={(l) => `${l} discharges per condition`}
                 formatter={(v, n: string, p) => {
                   const row = p.payload as (typeof chart)[number]

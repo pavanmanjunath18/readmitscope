@@ -4,7 +4,7 @@ import {
 } from 'recharts'
 import Section from './Section'
 import Insight from './Insight'
-import { C, tooltipStyle } from '../theme'
+import { C, tooltipProps } from '../theme'
 import { errPct, stateName } from '../format'
 import type { StateStat } from '../types'
 
@@ -83,7 +83,7 @@ export default function StateRanking({ data, minHospitals }: { data: StateStat[]
               />
               <Tooltip
                 cursor={{ fill: 'rgba(45,212,191,0.08)' }}
-                contentStyle={tooltipStyle}
+                {...tooltipProps}
                 formatter={(_v: number, _n, p) => {
                   const s = p.payload as StateStat
                   const sig = s.significant ? ` · significantly ${s.significant} 1.0` : ' · not significantly different from 1.0'
