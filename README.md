@@ -30,10 +30,10 @@ The core metric is **Excess Readmission Ratio (ERR)**:
 ## Headline Findings
 
 1. **Readmission performance is a hospital-level trait.** 9.2% of hospitals are worse than expected on every reported condition, about twice the 4.7% chance would give. ("Most hospitals are worse on at least one condition" is expected by construction.)
-2. **The "small hospitals do worst" pattern is a reporting artifact.** CMS only publishes counts when readmissions are 11 or more. Once that is accounted for, volume has no detectable effect (−0.03 ERR points per doubling, 95% CI −0.33 to +0.26).
+2. **The "small hospitals do worst" pattern is a reporting artifact.** CMS only publishes counts when readmissions are 11 or more. Once that is accounted for, volume has no detectable effect (−0.05 ERR points per doubling, 95% CI −0.34 to +0.25).
 3. **No condition stands out.** All six sit between 47% and 50% above 1.0; surgical and medical measures do not differ (paired p = 0.58).
 4. **Star rating tracks readmissions strongly** (★1 +4.0 ERR points vs ★3, ★5 −4.0), partly by construction because the rating includes readmission measures.
-5. **The for-profit gap is small once rating and state are considered** (+0.4 points, p = 0.07).
+5. **The for-profit gap is small once rating and state are considered** (+0.4 points, p = 0.08).
 6. **Seven states are significantly above 1.0** (led by NJ and MA) and twelve below, ranking only states with 10 or more reporting hospitals.
 
 Tests use one value per hospital or hospital-clustered standard errors, because measures from the same hospital are correlated.

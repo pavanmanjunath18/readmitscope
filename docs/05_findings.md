@@ -39,7 +39,7 @@ than condition-specific programmes.
   average (mean ERR 0.986, 36% above 1.0).
 - On suppression-safe rows (discharges ≥ 2 × 11 ÷ expected rate), Spearman ρ shrinks from
   −0.16 to **−0.05**. In the adjusted model the volume effect is
-  **−0.03 ERR points per doubling (95% CI −0.33 to +0.26, p = 0.82)** — no detectable effect.
+  **−0.05 ERR points per doubling (95% CI −0.34 to +0.25, p = 0.76)** — no detectable effect.
 
 **So what:** volume should not be used to target interventions on this evidence. A size
 measure not tied to the suppression rule (e.g. bed count) would be needed to revisit it.
@@ -65,11 +65,11 @@ measure not tied to the suppression rule (e.g. bed count) would be needed to rev
 ## Phase 2 — which *kinds* of hospitals readmit more?
 
 Enriched with **CMS Hospital General Information** (ownership, type, overall star rating),
-joined on Facility ID (99.7% match).
+joined on Facility ID (99.5% match; July 2026 release).
 
 ### 5. Star rating tracks readmissions strongly — partly by construction
 - Share of measures above 1.0: **★1 = 73%** → **★5 = 31%**; hospital-level Spearman
-  **ρ = −0.44** (n = 2,628 hospitals).
+  **ρ = −0.44** (n = 2,621 hospitals).
 - Adjusted for ownership, condition and state: ★1 hospitals sit **+4.0 ERR points** above
   ★3 hospitals, and ★5 hospitals **−4.0 points** below (both p < 0.001).
 - ⚠ The CMS overall star rating includes a Readmission measure group containing these
@@ -79,8 +79,8 @@ joined on Facility ID (99.7% match).
 ### 6. The for-profit gap is small once rating and geography are considered
 - Unadjusted, for-profit hospitals have a higher median ERR than non-profit ones
   (1.009 vs 0.996; hospital-level Mann–Whitney p < 0.001; above 1.0 on 54% vs 46% of measures).
-- After adjusting for star rating, condition and state, the gap is **+0.42 ERR points
-  (95% CI −0.03 to +0.87, p = 0.07)** — not statistically significant.
+- After adjusting for star rating, condition and state, the gap is **+0.40 ERR points
+  (95% CI −0.05 to +0.85, p = 0.08)** — not statistically significant.
 - Federal / Military has only 18 hospitals and cannot be interpreted.
 
 ### 7. Hospital type is uninformative here (by design)
