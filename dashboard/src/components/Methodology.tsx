@@ -1,5 +1,6 @@
-import { Database, Filter, BarChart3, FlaskConical } from 'lucide-react'
+import { Database, Filter, BarChart3, FlaskConical, Github } from 'lucide-react'
 import Section from './Section'
+import { REPO_URL } from '../format'
 import type { Meta, Kpis, VolumeArtifact } from '../types'
 
 export default function Methodology({ meta, kpis, volume }: { meta: Meta; kpis: Kpis; volume: VolumeArtifact }) {
@@ -41,7 +42,18 @@ export default function Methodology({ meta, kpis, volume }: { meta: Meta; kpis: 
         ))}
       </div>
       <div className="mt-6 glass rounded-2xl border border-white/10 p-5">
-        <p className="text-sm text-gray-300 font-medium mb-2">Reproduce</p>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-gray-300 font-medium">Reproduce</p>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-vital hover:underline"
+          >
+            <Github size={14} aria-hidden /> Code, notebooks &amp; docs on GitHub
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        </div>
         <pre className="text-xs text-gray-400 overflow-x-auto"><code>{`python src/fetch_data.py        # pull CMS data + provenance
 python src/build_aggregates.py  # clean → processed CSVs, statistics + dashboard JSON
 pytest                          # pipeline + statistics tests

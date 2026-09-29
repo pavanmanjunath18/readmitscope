@@ -1,3 +1,5 @@
+import { Github } from 'lucide-react'
+import { REPO_URL } from '../format'
 import type { Meta } from '../types'
 
 export default function Footer({ meta }: { meta: Meta }) {
@@ -9,8 +11,17 @@ export default function Footer({ meta }: { meta: Meta }) {
           Government work; analysis and interpretations are the author's own and do not
           represent CMS.
         </p>
-        <p className="whitespace-nowrap">
-          Built by Pavan Mallipudi · ReadmitScope US
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:shrink-0">
+          Built by Pavan Mallipudi · ReadmitScope US ·
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-gray-300 hover:text-vital transition"
+          >
+            <Github size={13} aria-hidden /> GitHub
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
         </p>
       </div>
     </footer>
