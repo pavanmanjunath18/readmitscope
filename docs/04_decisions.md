@@ -14,7 +14,7 @@ is auditable.
 | D7 | Report **Spearman** (not Pearson) for volume vs ERR | Pearson correlation | Volume is highly right-skewed and the relationship need not be linear; Spearman is rank-based and robust |
 | D8 | Compare surgical vs medical **within hospital** (Wilcoxon signed-rank on each hospital's surgical − medical mean ERR) | Unpaired Mann–Whitney on all measures | The unpaired test mixes hospital differences with condition differences and treats correlated measures as independent |
 | D9 | Treat `Facility ID` (not name) as the entity key | Group by facility name | 2,995 names vs 3,055 IDs — names are not unique |
-| D10 | Join enrichment with `how='left'` keeping all HRRP rows | Inner join | Don't silently drop the 0.3% unmatched HRRP hospitals; they stay with null attributes |
+| D10 | Join enrichment with `how='left'` keeping all HRRP rows | Inner join | Don't silently drop the ~0.5% unmatched HRRP hospitals; they stay with null attributes |
 | D11 | Collapse 12 ownership values into 4 groups | Analyze all 12 | Several raw categories have tiny n; 4 groups (Non-profit/For-profit/Government/Federal) give interpretable, well-powered comparisons |
 | D12 | Treat for-profit = Proprietary + Physician-owned | Proprietary only | Physician-owned hospitals are investor/for-profit in nature; grouping matches the economic distinction being tested |
 | D13 | Exclude unrated hospitals from star-rating analysis | Impute a rating | ~40% are "Not Available"; rating is missing-not-at-random, so we report on rated hospitals and say so |

@@ -21,10 +21,10 @@
 | **Dataset** | Hospital General Information |
 | **Dataset ID** | `xubh-q36u` |
 | **Landing page** | https://data.cms.gov/provider-data/dataset/xubh-q36u |
-| **Rows** | 5,432 hospitals |
+| **Rows** | 5,419 hospitals |
 | **Used for** | Ownership, hospital type, emergency services, overall star rating |
-| **Join key** | `Facility ID` (CCN) — matches **99.7%** of reported HRRP hospitals |
-| **Modified** | 2026-04-28 |
+| **Join key** | `Facility ID` (CCN) — matches **99.5%** of reported HRRP hospitals |
+| **Modified** | 2026-07-22 |
 
 ## How the data is retrieved
 
@@ -54,8 +54,8 @@ Run with: `python src/fetch_data.py`
 | Conditions | 6 |
 | Size | ~2.07 MB |
 | Dataset `modified` | 2026-01-26 |
-| Dataset `released` | 2026-05-13 |
-| Retrieved (UTC) | 2026-06-18 |
+| Dataset `released` | 2026-08-13 |
+| Retrieved (UTC) | 2026-09-29 |
 
 ## Reproducibility
 

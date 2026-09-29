@@ -121,7 +121,7 @@ print("reported (usable ERR) rows:", len(clean))
 print("with discharge volume:", clean['discharges'].notna().sum())
 clean[['facility_id','facility_name','state','condition','err','discharges']].head()
 """),
-    md("✅ Clean, reported-only dataset ready for EDA → `notebooks/02_eda.ipynb`."),
+    md(" Clean, reported-only dataset ready for EDA : `notebooks/02_eda.ipynb`."),
 ]
 
 # ----------------------------------------------------------------------------- 02 EDA
