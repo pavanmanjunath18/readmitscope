@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Activity, Database, Calendar } from 'lucide-react'
-import { useReducedMotion } from '../format'
+import { Activity, Database, Calendar, Github, ArrowUpRight } from 'lucide-react'
+import { REPO_URL, useReducedMotion } from '../format'
 import type { Meta, Kpis } from '../types'
 
 // three.js + react-three-fiber are the heaviest part of the bundle and purely decorative,
@@ -45,7 +45,26 @@ export default function Hero({ meta, kpis }: { meta: Meta; kpis: Kpis }) {
             with reported measures across <strong className="text-white">{kpis.n_states}</strong> states (incl. D.C.),
             using public CMS Hospital Readmissions Reduction Program data.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3 text-xs text-gray-400">
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 rounded-lg border border-vital/40 bg-vital/10 px-4 py-2 text-sm font-semibold text-vital transition hover:border-vital hover:bg-vital/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-vital"
+            >
+              <Github size={16} aria-hidden />
+              View source on GitHub
+              <ArrowUpRight size={14} aria-hidden className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+            <a
+              href="#methodology"
+              className="inline-flex items-center rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 transition hover:border-white/30 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-vital"
+            >
+              How it was built
+            </a>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3 text-xs text-gray-400">
             <Badge icon={<Database size={13} />} text={meta.source} />
             <Badge icon={<Calendar size={13} />} text={`${meta.release ? `${meta.release} · ` : ''}Reporting period ${meta.reporting_period}`} />
             <Badge icon={<span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />} text={`Data retrieved ${retrieved}`} />

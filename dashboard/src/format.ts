@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 
+/** Public source repository for the project. */
+export const REPO_URL = 'https://github.com/pavanmanjunath18/readmitscope'
+
 /** p-value as readable text: "p < 0.001", "p = 0.068". */
 export function fmtP(p: number): string {
   if (!Number.isFinite(p)) return 'p n/a'
